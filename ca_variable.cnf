@@ -1,0 +1,31 @@
+
+
+#domain=$1
+#commonname=$domain
+
+[req]
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+countryName             = US
+stateOrProvinceName     = CO
+LocalityName            = NA
+organizationName        = "XD Innovation"
+organizationalUnit	= IT
+emailAddr		= mchaudhari@xdinnovation.com
+
+#Add your company details
+#country=US
+#state=CO
+#organization="XD Innovation"
+#organizationalunit=IT
+#email=mchaudhari@xdinnovation.com
+
+
+
+
+
+commonName              = www.mytraining.com
+commonName              = www.mytraining.com
+commonName              = www.mytraining.com
