@@ -1,0 +1,113 @@
+### Load Balancer Configuration in Windows	###
+
+install Apache24
+
+Create same environment as reverseproxy and for servers like {app1(instance1,instance2), app2 (instance1,instance2)}
+
+make changes accordingly for load balancer
+
+one more thing no need to make changes in only httpd.conf you can create it in httpd-ssl.conf also and just uncomment it in httpd.conf
+
+####		Before doing this all make the ssl certificate and keys entry into the httpd-ssl.conf file		####
+
+now add this lines
+
+<location /app1>
+   ProxyPass  "balancer://app1"  
+   ProxyPassReverse  "balancer://app1" 
+   #RewriteEngine  On
+   Header add Set-Cookie "ROUTEID=test.%{BALANCER_WORKER_ROUTE}e; path=/app1" env=BALANCER_ROUTE_CHANGED
+   </location>
+	
+   <location /app2>
+   ProxyPass  "balancer://app2"   
+   ProxyPassReverse  "balancer://app2" 
+   #RewriteEngine  On
+   Header add Set-Cookie "ROUTEID=test.%{BALANCER_WORKER_ROUTE}e; path=/app2" env=BALANCER_ROUTE_CHANGED
+  </location>
+  </VirtualHost> 
+  
+  <Proxy balancer://app1>
+	
+     BalancerMember http://localhost:97 route=app1-i1
+     BalancerMember http://localhost:98 route=app1-i2
+     ProxySet lbmethod=byrequests
+	 Proxyset stickysession=ROUTE
+</Proxy>
+
+<Proxy balancer://app2>
+     BalancerMember http://localhost:93 route=app2-i1
+     BalancerMember http://localhost:94 route=app2-i2
+     ProxySet lbmethod=byrequests
+	  Proxyset stickysession=ROUTE 
+</Proxy>    
+
+###			Modules are required		###
+
+$		LoadModule proxy_module modules/mod_proxy.so
+$		LoadModule proxy_http_module modules/mod_proxy_http.so
+$		LoadModule proxy_balancer_module modules/mod_proxy_balancer.so
+$		LoadModule lbmethod_bybusyness_module modules/mod_lbmethod_bybusyness.so
+$		LoadModule lbmethod_byrequests_module modules/mod_lbmethod_byrequests.so
+$		LoadModule lbmethod_bytraffic_module modules/mod_lbmethod_bytraffic.so
+$		LoadModule lbmethod_heartbeat_module modules/mod_lbmethod_heartbeat.so
+$		LoadModule slotmem_shm_module modules/mod_slotmem_shm.so
+$		LoadModule headers_module modules/mod_headers.so
+
+##	for cookies generation add ROUTE line in the file	##
+
+Go to command prompt for that and add the services for them all by installing 
+				
+				***steps for installation***
+				
+###		location for reverse proxy D:\reverseproxy\apache24\bin
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "reverseproxy"
+		httpd -t 				(then check again for syntax)
+	
+	Errors and troubleshooting for
+	
+	ssl.cnf file include [uncomment that] in httpd.conf
+	
+	ports in listening mode [find proccess ID (netstat -aob)] 
+	
+	
+###	location for app1 server D:\app1\instance1	
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "app1-i1"
+		httpd -t 				(then check again for syntax)
+		
+		check for error
+		
+###	location for app1 server D:\app1\instance2	
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "app1-i2"
+		httpd -t 				(then check again for syntax)
+		
+		check for error		
+		
+###	location for app1 server D:\app2\instance1\	
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "app2-i1"
+		httpd -t 				(then check again for syntax)
+		
+		check for error
+		
+###	location for app1 server D:\app2\instance2\instance2	
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "app2-i2-i2"
+		httpd -t 				(then check again for syntax)
+		
+		check for error				
+		
+###	Go to services and start those services	###
+
+###		go to browser and check for the url referesh it for load balancing		###	
+
+To check the cookies press
+##		Func + F12 keys		##

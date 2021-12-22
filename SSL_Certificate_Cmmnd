@@ -1,0 +1,40 @@
+#First install openssl from browser
+win64OpenSSL-3.0.0
+
+#CONFIGURE IT 
+from downloads install it, choose default path  C:\Program Files\OpenSSL-Win64\bin
+
+#launch openssl and just follow the commands below
+
+#generate the private keys
+genrsa -out ca.key 2048
+
+# Create CSR using the private key
+req -new -key ca.key -subj "/CN=xdi.cloud" -out ca.csr
+
+openssl  req -new -key ca.key -subj "/C=US/ST=CO/O=XD Innovation/OU=IT/CN=training.minutuscomputing.com/emailAddress=zifa.khan@minutuscomputing.com" -out ca.csr
+
+# Self signed certificate using its own private key
+x509 -req -in ca.csr -signkey ca.key -CAcreateserial  -out ca.crt -days 1000
+
+## Generate certificates for services
+
+## This could be for each service or all in one wildcard certificate
+
+## Create private key and certificate signing request
+
+req -out 3dxserver.csr -new -newkey rsa:2048 -nodes -keyout 3dxserver.key -subj "/C=US/ST=CO/O=XD Innovation/OU=IT/CN=training.minutuscomputing.com/emailAddress=zifa.khan@minutuscomputing.com"
+
+x509 -req -in 3dxserver.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out 3dxserver.crt -days 1000
+
+To read the certificate run this commands
+
+openssl x509 -text -noout -in 3dxserver.crt
+
+/rp/apache/conf/ssl_Cert
+
+#####when cipher error is there then follow this for troubleshooting#####
+
+yum reinstall mod_ssl
+
+move this mod_ssl.so file from /etc/httpd/modules to reverse proxy /rp/apache/modules

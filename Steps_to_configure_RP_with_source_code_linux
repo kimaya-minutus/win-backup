@@ -1,0 +1,169 @@
+			###Steps to configure apache REVERSE PROXY with source code###
+
+#step 1
+	download the apache tar file (source code)
+	  
+	  httpd-2.4.51.tar.gz 
+
+copy this file to the linux via win scp
+now for win scp always remember you need to have the root access/permisssion
+
+#step 2
+after copying this file to the linux go the directory "/"
+take the back up of the file 
+	mv ~centos/httpd-2.4.51.tar.gz ./httpd-2.4.51.tar.gz.bak
+
+#step3
+and make directories over there 
+	mkdir /rp /qpp1 /app2 /app3
+
+#step4
+copy that zip file into these directories one by one		
+		
+	cp ~centos/httpd-2.4.51.tar.gz /rp/
+    cp ~centos/httpd-2.4.51.tar.gz /app1/
+    cp ~centos/httpd-2.4.51.tar.gz /app2/
+    cp ~centos/httpd-2.4.51.tar.gz /app3/
+
+#step 5
+now go to one of the directory /app3
+ extract and unzip the file with this below command
+	tar -xvzf httpd-2.4.51.tar.gz
+#step 6
+now go the directory 
+	cd httpd-2.4.51
+	
+#step 7 : Prerequisites	
+
+Some prerequisites are required like
+
+	a) Packages "apr and apr-util" 
+		sudo yum install -y apr apr-util
+
+	b) "gcc" 
+		sudo yum install -y gcc
+
+	c) "pcre" 
+		sudo yum install pcre-devel -y
+
+	d) Disk space need to be free atleast(50Mb)
+		free -h
+
+where , PCRE - Perl-Compatible Regular Expressions Library
+
+always remember 
+need to get extract the httpd zip file two times with different name like 
+	Rename 1st extracted file to avoid confusion
+		mv httpd-2.4.51 httpd1-2.4.51
+
+then extract it again with command 
+		httpd-2.4.51.tar.gz
+
+
+run this command in 
+	cd httpd1-2.4.51
+	./configure --prefix=/app3/inst1/apache
+	make
+	make install
+	vim /app3/inst1/apache/conf/httpd.conf
+ change the port for app 3 instance 1 - 83
+ 
+Start the service for instance 1
+	/app3/inst1/apache/bin/apachectl -k start
+
+now for instance 2 
+	cd httpd-2.4.51
+ 
+	./configure --prefix=/app3/inst2/apache
+	make
+	make install
+	vim /app3/inst2/apache/conf/httpd.conf
+ change the port for app 3 instance 2 - 84
+ 
+ Start the service for instance 2
+	/app3/inst2/apache/bin/apachectl -k start
+ 
+	Follow the same for app1 and app2
+	
+Now use this command to check 
+		curl http://localhost:88
+		curl http://localhost:89
+		
+#### REVERSE PROXY ####
+
+copy zip file into /rp 
+then extract it here only
+		tar -xvzf httpd-2.4.51.tar.gz
+Go to with 
+		cd httpd-2.4.51
+
+cinfigure the path now with command
+		./configure --prefix=/rp/apache
+
+now compile it with make command and install those packages and make directory
+		make
+		make install
+		
+		 vim /rp/apache/conf/httpd.conf
+
+<VirtualHost *:80>
+                 <location /app1/inst1>
+                         ProxyPass  http://localhost:88/
+                         ProxyPassReverse  http://localhost:88/
+                         #RewriteEngine  On
+                 </location>
+
+                 <location /app1/inst2>
+                         ProxyPass  http://localhost:89/
+                         ProxyPassReverse  http://localhost:89/
+                         #RewriteEngine  On
+                 </location>
+
+                 <location /app2/inst1>
+                         ProxyPass  http://localhost:86/
+                         ProxyPassReverse  http://localhost:86/
+                         #RewriteEngine  On
+                 </location>
+
+                 <location /app2/inst2>
+                         ProxyPass  http://localhost:87/
+                         ProxyPassReverse  http://localhost:87/
+                         #RewriteEngine  On
+                 </location>
+
+                 <location /app3/inst1>
+                         ProxyPass  http://localhost:83/
+                         ProxyPassReverse  http://localhost:83/
+                         #RewriteEngine  On
+                 </location>
+
+                 <location /app3/inst2>
+                         ProxyPass  http://localhost:84/
+                         ProxyPassReverse  http://localhost:84/
+                         #RewriteEngine  On
+                 </location>
+                 </VirtualHost>
+
+Add the following modules
+		LoadModule proxy_module modules/mod_proxy.so
+		LoadModule proxy_http_module modules/mod_proxy_http.so
+		LoadModule slotmem_shm_module modules/mod_slotmem_shm.so
+		
+save file and exit
+
+Now start the service 
+		/rp/apache/bin/apachectl -k start
+
+for better understanding go to every apps htdocs and change the index.html file with name like for example
+
+		 	vim /app1/inst1/apache/htdocs/index.html
+			vim /app1/inst2/apache/htdocs/index.html
+
+now go to browser or use curl for testing
+		
+	curl http://localhost/app1/inst1
+	curl http://localhost/app1/inst2
+	curl http://localhost/app2/inst1
+	curl http://localhost/app2/inst2
+	curl http://localhost/app3/inst1
+	curl http://localhost/app3/inst2
