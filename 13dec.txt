@@ -1,0 +1,36 @@
+[ req ]
+
+default_md = sha256
+
+prompt = no
+
+req_extensions = req_ext
+
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]
+
+0.commonName = *.minutuscloud.com
+
+countryName = US
+
+stateOrProvinceName = OR
+
+organizationName = minutus computing
+
+[ req_ext ]
+
+keyUsage=critical,digitalSignature,keyEncipherment
+
+extendedKeyUsage=critical,serverAuth,clientAuth
+
+
+
+
+
+####
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSEkeyUsage= digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName= @alt_names
+
+[alt_names]DNS.1= dev.deliciousbrains.com

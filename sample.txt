@@ -1,0 +1,14 @@
+grep "mod_proxy" /etc/httpd/conf.modules.d/00-proxy.conf
+
+
+<VirtualHost 192.168.98.128:9090>
+ServerName training2.com
+ServerAlias www.training2.com
+DocumentRoot /var/www/html/virtual
+CustomLog "logs/virtual-vhost.log" combined
+</VirtualHost>
+<Directory /var/www/html/virtual>
+Require all granted
+AllowOverride None
+</Directory>
+ 

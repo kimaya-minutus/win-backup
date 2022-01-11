@@ -1,0 +1,71 @@
+### Prerequisites ###
+Apache installed on the CentOS 7 server with a virtual host configured. Be sure that you have a virtual host file for your domain. 
+
+You should own or control the registered domain name that you wish to use the certificate with. If you do not already have a registered domain name, 
+you may purchase one on Namecheap, get one for free on Freenom, or use the domain registrar of your choice.
+
+A DNS A Record that points your domain to the public IP address of your server. You can follow this introduction to DigitalOcean DNS for details
+on how to add them with the DigitalOcean platform. DNS A records are required because of how Let’s Encrypt validates that you own the domain 
+it is issuing a certificate for. For example, if you want to obtain a certificate for example.com, that domain must resolve to your server
+for the validation process to work. Our setup will use example.com and www.example.com as the domain names, both of which will require a valid DNS record.
+
+
+
+sudo yum install epel-release
+
+sudo yum install certbot python2-certbot-apache mod_ssl
+
+sudo certbot --apache -d example.com
+
+ The first domain name in the list of parameters will be the base domain used by 
+ Let’s Encrypt to create the certificate. For this reason, pass the base domain name as
+ first in the list, followed by any additional subdomains or aliases:
+	
+sudo certbot --apache -d example.com -d www.example.com
+
+sudo certbot --apache
+
+You will also be able to choose between enabling both http and https access or forcing all requests to redirect to https.
+For better security,it is recommended to choose the option 2: Redirect if you do not have any special need to allow 
+unencrypted connections. Select your choice then hit ENTER.
+
+When the installation is successfully finished, you will see congratulations message
+
+The generated certificate files will be available within a subdirectory named after your base domain in the /etc/letsencrypt/live directory.
+
+Checking your Certificate Status
+At this point, you can ensure that Certbot created your SSL certificate correctly by using the SSL Server Test from the cloud security company Qualys.
+
+Open the following link in your preferred web browser, replacing example.com with your base domain:
+
+https://www.ssllabs.com/ssltest/analyze.html?d=example.com
+
+nce the test starts running, it may take a few minutes to complete. The status of the test will update in your browser.
+
+When the testing finishes, the page will display a letter grade that rates the security and quality of your server’s configuration.
+At the time of this writing, default settings will give an A rating:
+
+Step 4 — Setting Up Auto Renewal
+Let’s Encrypt certificates are valid for 90 days, but it’s recommended that you renew the certificates every 60 days to allow a margin of error. 
+Because of this, it is a best practice to automate this process to periodically check and renew the certificate.
+
+First, let’s examine the command that you will use to renew the certificate. The certbot Let’s Encrypt client has a renew command that 
+automatically checks the currently installed certificates and tries to renew them if they are less than 30 days away
+from the expiration date. By using the --dry-run option, you can run a simulation of this task to test how renew works:
+
+sudo certbot renew --dry-run
+
+Notice that if you created a bundled certificate with multiple domains, only the base domain name will be shown in the output,
+ but the renewal will be valid for all domains included in this certificate.
+
+A practical way to ensure your certificates will not get outdated is to create a cron job that will periodically execute 
+the automatic renewal command for you. Since the renewal first checks for the expiration date and only executes
+the renewal if the certificate is less than 30 days away from expiration,
+it is safe to create a cron job that runs every week or even every day.
+
+Edit the crontab to create a new job that will run the renewal twice per day. To edit the crontab for the root user, run:
+
+sudo crontab -e
+
+0 0,12 * * * python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew
+

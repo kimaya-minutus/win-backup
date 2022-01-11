@@ -1,0 +1,135 @@
+virtual hosting Steps:-
+1. training1.com
+2. training2.com
+192.168.98.128
+
+         Steps:-
+1. yum install -y httpd
+2. systemctl status httpd
+3. systemctl start httpd
+4. systemctl enable httpd
+5. systemctl status httpd
+6. cd /var/www/html/
+   
+7. mkdir -p /var/www/html/{default,virtual}
+8. cd /var/www/html/
+9. ls 
+10. ll -Z /var/www/html
+**if context is not set then set it by using below command: 
+11. semanage fcontext -a -t httpd_sys_content_t "/server(/.*)?"
+12. restorecon -Rv /server
+ 
+13. cd /etc/httpd/conf.d
+14. vim /etc/httpd/conf.d/default_Vhost.conf
+
+<VirtualHost *: 80>
+ServerName training1.com
+ServerAlias www.training1.com
+DocumentRoot /var/www/html/default
+CustomLog "logs/default_vhost.log" combined
+</VirtualHost>
+<Directory /var/www/html/default>
+Require all granted
+AllowOverride None
+</Directory>
+<VirtualHost *: 80>
+ServerName training2.com
+ServerAlias www.training2.com
+DocumentRoot /var/www/html/virtual
+CustomLog "logs/virtual_vhost.log" combined
+</VirtualHost>
+<Directory /var/www/html/virtual>
+Require all granted
+AllowOverride None
+</Directory>
+
+15. apachectl configtest
+16. systemctl status httpd.service 
+17. vim /etc/resolv.conf
+
+18. vim /var/www/html/default/index.html
+<html>
+<h1> This is training1.com </h1>
+<h2> Welcome to training1.com webpage </h2>
+<h2> Thanks for Visiting</h2>
+</html>
+ 
+19. vim /var/www/html/virtual/index.html
+<html>
+<h1> This is training2.com </h1>
+<h2> Welcome to training2.com webpage </h2>
+<h2> Thanks for Visiting</h2>
+</html>
+
+###add entry of training1 and training2.com in /etc/hosts file
+20. vim /etc/hosts
+     192.168.98.128  training1.com
+     192.168.98.128  training2.com
+
+21. firewall-cmd --add-service=http --permanent 
+22. firewall-cmd --permanent --add-service=https
+23. firewall-cmd --reload
+24. firewall-cmd --list-all
+25. systemctl restart httpd
+26. httpd -t
+27. elinks http://training1.com
+28. elinks http://training2.com
+ping training1.com
+ping training2.com
+
+29. then check with browser also.
+
+
+### for https ssl 
+<VirtualHost *:443>
+ServerName training1.com
+ServerAlias www.training1.com
+SSLEngine on
+SSLProtocol all -SSLv2 -SSLv3
+SSLCipherSuite HIGH:MEDIUM:!aNULL:!MD5
+SSLHonorCipherOrder on
+SSLCertificateFile /etc/pki/tls/certs/server.crt
+SSLCertificateKeyFile /etc/pki/tls/private/server.key
+SSLCertificateChainFile /etc/pki/tls/certs/server.crt
+DocumentRoot /var/www/html/default
+ErrorLog logs/ssl_error_log
+</VirtualHost>
+
+### for redirection add this 
+<VirtualHost *:80>
+ServerName training1.com
+RewriteEngine on
+RewriteRule ^(/.*)$ https://%{HTTP_HOST}$1 [redirect=301]
+</VirtualHost>
+
+
+####  Troubleshoot hint   ####
+when you take access of any system  and while editing any file you close the session then the swap file gets created 
+so to overcome this you can  take a bakup of that file with .back extension and delete the swap file if it is not 
+showing in regular files then check hidden files also. 
+
+
+     ###### AUTHENTICATION OF A WEBSITE i.e. training1.com #######
+1. vim /etc/httpd/conf.d/auth.conf
+
+<Directory /var/www/default/>
+AuthType Basic
+AuthName "PSW Auth "
+AuthUserFile /etc/httpd/conf/.htpasswd
+Require valid-user
+</Directory>
+
+2. htpasswd -c /etc/httpd/conf/.htpasswd kimaya
+3. vim  /etc/httpd/conf/.htpasswd
+4. systemctl restart httpd.service
+5. then type websitename in browser and check authentication
+
+
+IMP Note:
+when your dns not working in Host machine then check entry into this:
+vim /etc/nsswitch.conf
+in this check listening for files or dns
+
+
+**To check virtual host present 
+1. httpd -t -D DUMP_VHOSTS 

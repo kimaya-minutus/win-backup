@@ -1,0 +1,32 @@
+1. server system =192.168.98.128
+2. client system =192.168.98.129
+
+first install required packages at client system 
+1. yum install -y rpcbind nfs-utils
+ the folder we want to share is suppose Test and /tmp
+
+2. vim /etc/exports
+in this file write path of directory to share:
+/root/Test    *(rw,sync) 
+/tmp          192.168.98.128(ro,sync)
+
+3. systemctl start nfs
+4. systemctl start rpcbind
+
+to check which folder you have shared 
+5. showmount -e
+ 
+At server system
+
+to access shared folder you need to create one directory and mount those shared folder on that directory
+1. mkdir accessfolder/
+2. showmount -e 192.168.98.129
+**clnt_create: RPC: Port mapper failure - Unable to receive: errno 113 (No route to host)
+if you get this error then stop firewalld service in both systems.
+
+3. systemctl stop firewalld
+
+4. mount 192.168.98.129:/root/Test accessfolder/
+5. cd accessfolder/
+
+

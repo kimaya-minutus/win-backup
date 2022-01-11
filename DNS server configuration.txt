@@ -1,0 +1,81 @@
+DNS Server Configuration:
+
+for DNS you must have a static IP address
+
+1. yum install -y bind bind-utils
+2. hostnamectl set-hostname minutus.training.com
+3. vim /etc/named.conf 
+  ## make entry of ip
+listen-on port 53 { 127.0.0.1;192.168.98.128; };
+allow-query     { localhost;any; };
+##and in zone Section
+
+zone "training.com" IN {
+        type master;
+        file"/var/named/training_forwardzone";
+        allow-update{ none; };
+};
+zone "98.168.192.in-addr.arpa" IN {
+        type master;
+        file"/var/named/training_reversezone";
+        allow-update{ none; };
+};
+
+4. systemctl start named
+5. systemctl enable named
+6. systemctl status named
+7. firewall-cmd --permanent --add-port=53/tcp
+8. firewall-cmd --permanent --add-port=53/udp
+9. firewall-cmd --permanent --add-service=dns
+10. firewall-cmd --reload
+11. vim /var/named/training_forwardzone
+     $TTL 1D
+@       IN SOA   minutus.training.com.   root.training.com. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+
+
+@           IN     NS      server.training.com.
+@           IN     A       192.168.98.128
+server      IN     A       192.168.98.128
+host        IN     A       192.168.98.128
+www         IN     A       192.168.98.128
+
+12. vim /var/named/training_reversezone
+$TTL 1D
+@       IN SOA   minutus.training.com.   root.training.com. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+
+@           IN     NS      server.training.com.
+@           IN     PTR      training.com.
+server      IN     A       192.168.98.128
+www         IN     A       192.168.98.128
+host        IN     A       192.168.98.128
+128         IN    PTR      minutus.training.com.
+128         IN    PTR      www.training.com.
+
+
+13. ll 
+## check ownership of training_forwardzone and training_reversezone 
+14. chown root:named training_forwardzone 
+15. chown root:named training_reversezone
+## check syntax of configuration file
+16. named-checkconf -z /etc/named.conf
+17. named-checkzone forward /var/named/training_forwardzone
+18. named-checkzone reverse /var/named/training_reversezone
+19. systemctl restart named
+20. ping server
+21. ping host
+22. ping www
+## then check from client side 
+23. vim /etc/resolve.conf
+here check for training.com and add nameserver as ip of nameserver i.e. 192.168.98.128
+24. systemctl restart NetworkManager
+25. dig training.com

@@ -1,0 +1,55 @@
+Load Balancer Configuration:-
+
+Web Server1 --> Server System = 192.168.98.128 = minutus.training.com
+Web Server2 --> Client System = 192.168.98.129 = minutus2.training.com
+Load Balancer-> Reverse System = 192.168.98.130 = minutus1.training.com
+
+* Make sure that /etc/hosts file contains FQD hostnames entries pointing to ip addresses in all servers
+1. vim /etc/hosts
+ 192.168.98.128 minutus.training.com
+ 192.168.98.129 minutus2.training.com
+ 192.168.98.130 minutus1.training.com
+
+
+* Install httpd package on all the server 
+4. yum install -y httpd 
+5. firewall-cmd --permanent --add-port=80/tcp
+6. firewall-cmd --reload
+7. firewall-cmd --permanent --add-service=http
+8. firewall-cmd --reload
+
+9. systemctl start httpd
+10. systemctl enable httpd
+
+At Load Balancer i.e. 192.168.98.130
+
+Check entry of mod_proxy.so and mod_proxy_balancer.so 
+11. vim /etc/conf.modules.d/00-proxy.conf
+
+12. vim /etc/httpd/conf.d/loadbalancer.conf 
+ProxyRequests Off
+<Proxy balancer://Test>
+     BalancerMember http://192.168.98.128:80
+     BalancerMember http://192.168.98.129:80
+     ProxySet lbmethod=byrequests
+</Proxy>
+<Location /balancer-manager>
+     SetHandler balancer-manager
+</Location>
+ProxyPass /balancer-manager !
+ProxyPass / balancer://Test/
+
+13. systemctl restart httpd
+
+At Server System i.e 192.168.98.128
+14. vim /var/www/html/index.html
+write html code 
+
+At client System i.e 192.168.98.129
+15. vim /var/www/html/index.html
+write html code 
+
+16. systemctl restart httpd
+
+then in browser enter load balancer's ip address
+17.http://192.168.98.130

@@ -1,0 +1,57 @@
+Reverse Proxy Configuration:-
+
+BacknedServer --> Server System = 192.168.98.128 = minutus.training.com
+ReverseProxy Server --> Reverse System = 192.168.98.130 = minutus1.training.com
+
+* Make sure that /etc/hosts file contains FQD hostnames entries pointing to ip addresses in both servers
+1. vim /etc/hosts
+ 192.168.98.128 minutus.training.com
+ 192.168.98.130 minutus1.training.com
+
+* Disabled SELINUX on both the servers
+2. vim /etc/sysconfig/selinux
+  SELINUX=disabled
+3. reboot
+
+* Install httpd package on both the server 
+4. yum install -y httpd 
+5. firewall-cmd --permanent --add-port=80/tcp
+6. firewall-cmd --reload
+7. firewall-cmd --permanent --add-service=http
+8. firewall-cmd --reload
+
+9. systemctl start httpd
+10. systemctl enable httpd
+
+At Reverse server i.e. 192.168.98.130
+
+Check entry of mod_proxy.so and mod_proxy_http.so 
+1. vim /etc/conf.modules.d/00-proxy.conf
+
+2. vim /etc/httpd/conf/httpd.conf 
+* * in this file at the end make the entry of following : 
+Make sure this entry should be commented :#IncludeOptional conf.d/*.conf
+ProxyRequests Off
+NameVirtualHost *:80
+<VirtualHost *:80>
+    ServerAdmin root@training.com
+    ServerName minutus1.training.com
+    ServerAlias minutus1
+    ErrorLog logs/minutus1.training.com-error_log
+    CustomLog logs/minutus1.training.com-access_log common
+   ProxyPass / http://minutus.training.com/
+   ProxyPassReverse / http://minutus.training.com/
+   RewriteEngine  On
+</VirtualHost>
+
+3. systemctl restart httpd
+
+At Server System i.e 192.168.98.128
+1. vim /var/www/html/index.html
+write html code 
+
+2. systemctl restart httpd
+
+**Test it from the browser but before that make sure that the entry of reverse proxy hostname with ip in that system's /etc/hosts file
+http://minutus1.training.com
+http://192.168.98.130

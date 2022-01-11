@@ -1,0 +1,114 @@
+                  ##### HAPROXY as LOAD BALANCER ##### 
+
+
+Web Server1 --> Server System = 192.168.98.128 = minutus.training.com     web1
+Web Server2 --> Client System = 192.168.98.129 = minutus2.training.com    web2
+Haproxy   --> Reverse System = 192.168.98.130 = minutus1.training.com
+
+* Make sure that /etc/hosts file contains FQD hostnames entries pointing to ip addresses in all servers
+1. vim /etc/hosts
+ 192.168.98.128 minutus.training.com  web1
+ 192.168.98.129 minutus2.training.com  web2
+ 192.168.98.130 minutus1.training.com
+       
+            AT WEBSERVER
+
+* Install httpd package on both web server i.e. web1 and web2
+4. yum install -y httpd 
+5. firewall-cmd --permanent --add-port=80/tcp
+6. firewall-cmd --reload
+7. firewall-cmd --permanent --add-service=http
+8. firewall-cmd --reload
+
+9. systemctl start httpd
+10. systemctl enable httpd
+
+* then create index.html page in both servers
+11. vim /var/www/html/index.html
+
+
+
+       AT HAPROXY
+12. yum install -y haproxy
+13. vim /etc/haproxy/haproxy.cfg
+## at the end make entry of this
+frontend haproxy_in
+        bind *:80
+        default_backend webserver
+
+#### haproxy backend configuration###
+backend webserver
+        balance  roundrobin
+        mode http
+        server web1 192.168.98.128:80  check
+        server web2 192.168.98.129:80  check
+
+## To check errors in connfiguration file
+14.haproxy -f /etc/haproxy/haproxy.cfg
+
+15. systemctl restart haproxy
+## in browser add entry of haproxy
+16. http://192.168.98.130
+
+
+             ########## HAPROXY WITH SSL AND STATS ###########
+just change configuration file
+1. vim /etc/haproxy/haproxy.conf
+frontend haproxy_in
+        bind *:80
+        bind *:443 ssl crt /etc/pki/tls/certs/haproxy.pem
+        mode http
+        timeout client 30s
+         # enable statistics reports
+        stats enable
+      # auth info for statistics site
+        stats auth admin:admin1234
+      # hide version of HAProxy
+        stats hide-version
+      # display HAProxy hostname
+        stats show-node
+      # refresh time
+        stats refresh 60s
+      # statistics reports' URI
+        stats uri /haproxy?stats
+       default_backend webserver
+
+#### haproxy backend configuration###
+backend webserver
+        balance  roundrobin
+        timeout connect 10s
+        timeout server  40s
+        mode http
+        server web1 192.168.98.128:80  check
+        server web2 192.168.98.129:80  check
+
+     ####### Configure Rsyslog to get logs for HAProxy  #########
+1. add entry of following in defaults section of vim /etc/haproxy/haproxy.conf file
+
+      # get HTTP request log
+    option             httplog
+
+2. vim /etc/rsyslog.conf
+# line 15,16: uncomment, lne 17: add
+$ModLoad imudp
+$UDPServerRun 514
+$AllowedSender UDP, 127.0.0.1
+# line 54: change like follows
+*.info;mail.none;authpriv.none;cron.none,local2.none   /var/log/messages
+local2.*                                                /var/log/haproxy.log
+
+3.  systemctl restart rsyslog
+
+
+         ########  Change httpd settings on Backends to logging X-Forwarded-For header ########
+before that add entry of following in frontend section of vim /etc/haproxy/haproxy.conf file 
+1. vim /etc/haproxy/haproxy.conf
+# send X-Forwarded-For header
+    option             forwardfor
+then at backend server i.e. web1 and web2 add following in httpd.conf file
+2. vim /etc/httpd/conf/httpd.conf
+
+# line 196: change like follows
+LogFormat "\"%{X-Forwarded-For}i\" %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+
+3. systemctl restart httpd.service

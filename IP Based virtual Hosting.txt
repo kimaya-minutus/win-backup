@@ -1,0 +1,143 @@
+IP Based Virtual Hosting:
+
+192.168.98.130 = training.edu
+192.168.98.131 = training.net
+192.168.98.132 = training.org
+Steps:-
+AT DNS Server i.e. Server system
+# DNS server should be configured
+add entries in 
+before that you can take backup of that file
+1.vim /etc/named.rfc1912.zones  or vim /etc/named.conf
+zone "training.edu" IN {
+        type master;
+        file"/var/named/training_forwardzone";
+        allow-update{ none; };
+};
+
+zone "training.net" IN {
+        type master;
+        file"/var/named/training_forwardzone";
+        allow-update{ none; };
+};
+zone "training.org" IN {
+        type master;
+        file"/var/named/training_forwardzone";
+        allow-update{ none; };
+};
+## note: in all zones we considered only training_forwardzone file which we have created at the time of DNS configuration 
+$TTL 1D
+@       IN SOA   minutus.training.com.   root.training.com. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+
+
+@           IN     NS      server.training.com.
+$ORIGIN  training.com.
+@           IN     A       192.168.98.128
+server      IN     A       192.168.98.128
+host        IN     A       192.168.98.128
+www         IN     A       192.168.98.128
+minutus1    IN     A       192.168.98.130
+client      IN     A       192.168.98.130
+$ORIGIN training.edu.
+@           IN     A       192.168.98.130
+www         IN     A       192.168.98.130
+$ORIGIN training.net.
+@           IN     A       192.168.98.131
+www         IN     A       192.168.98.131
+$ORIGIN training.org.
+@           IN     A       192.168.98.132
+www         IN     A       192.168.98.132
+## Add the entries of these three websites in hosts file
+vim /etc/hosts
+192.168.98.130   www.training.edu
+192.168.98.131   www.training.net
+192.168.98.132   www.training.org                                                                                                         10,1          Top
+
+### At Web server i.e. ReverseProxy
+yum install httpd -y
+systemctl start httpd
+systemctl enable httpd
+firewall-cmd –permanent –zone=public –add-service=http
+firewall-cmd –reload
+## using nmtui command add 2 more ip as follows:
+nmtui
+                           ┌───────────────────────────┤ Edit Connection ├───────────────────────────┐
+                           │                                                                        ↑│ 
+                           │         Profile name ens33___________________________________          ▮│ 
+                           │               Device ens33 (00:0C:29:C4:20:BB)_______________          ▒│ 
+                           │                                                                        ▒│ 
+                           │ ═ ETHERNET                                                    <Show>   ▒│ 
+                           │                                                                        ▒│ 
+                           │ ╤ IPv4 CONFIGURATION <Manual>                                 <Hide>   ▒│ 
+                           │ │          Addresses 192.168.98.130/24________ <Remove>                ▒│ 
+                           │ │                    192.168.98.131/24________ <Remove>                ▒│ 
+                           │ │                    192.168.98.132/24________ <Remove>                ▒│ 
+                           │ │                    <Add...>                                          ▒│ 
+                           │ │            Gateway 192.168.98.1_____________                         ▒│ 
+                           │ │        DNS servers 192.168.98.128___________ <Remove>                ▒│ 
+                           │ │                    <Add...>                                          ▒│ 
+                           │ │     Search domains <Add...>                                          ▒│ 
+                           │ │                                                                      ▒│ 
+                           │ │            Routing (No custom routes) <Edit...>                      ▒│ 
+                           │ │ [ ] Never use this network for default route                         ▒│ 
+                           │ │ [ ] Ignore automatically obtained routes                             ▒│ 
+                           │                                                                        ↓│ 
+                           
+ 
+vim /etc/httpd/conf/httpd.conf
+
+<VirtualHost 192.168.98.130>
+    ServerName training.edu
+    ServerAlias www.training.edu
+    DocumentRoot /var/www/html/training_com
+</VirtualHost>
+<VirtualHost 192.168.98.131>
+    ServerName training.net
+    ServerAlias www.training.net
+    DocumentRoot /var/www/html/training_net
+</VirtualHost>
+<VirtualHost 192.168.98.132>
+    ServerName training.org
+    ServerAlias www.training.org
+    DocumentRoot /var/www/html/training_org
+</VirtualHost>
+
+ 
+cd /var/www/html/
+mkdir training_edu training_net tarining_org
+vim /var/www/html/training_edu/index.html
+<html>
+<h1> This is training.edu </h1>
+<h2> Welcome to training.edu webpage </h2>
+</html>
+
+vim /var/www/html/training_net/index.html
+<html>
+<h1> This is training.net </h1>
+<h2> Welcome to training.net webpage </h2>
+</html>
+
+vim /var/www/html/training_org/index.html
+<html>
+<h1> This is training.org </h1>
+<h2> Welcome to training.org webpage </h2>
+</html>
+
+ ## Add the entries of these three websites in hosts file
+vim /etc/hosts
+192.168.98.130   www.training.edu
+192.168.98.131   www.training.net
+192.168.98.132   www.training.org 
+ 
+## Then on browser check entries of these websites:
+http://www.training.edu
+http://www.training.net
+http://www.training.org
+http://192.168.98.130
+http://192.168.98.131
+http://192.168.98.132

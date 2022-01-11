@@ -1,0 +1,16 @@
+yum server configuration:
+connect to cdrom
+1.mkdir /cdrom
+
+2.mount /dev/cdrom /cdrom
+
+3.vim /etc/yum.repos.d/local.repo
+[LocalRepo]
+name=LocalRepository
+baseurl=file:///cdrom
+enabled=1
+gpgcheck=0
+
+
+4.yum repolist
+5.yum clean all

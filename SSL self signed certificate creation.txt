@@ -1,0 +1,21 @@
+SSL for minutus.training.com
+key is in : /etc/pki/tls/private/
+## generate a private key in respective folder
+1. openssl genrsa 1024 > minutus.training.com.key
+
+## signing request using above created key 
+2.openssl req -new -key /etc/pki/tls/private/minutus.training.com.key >  minutus.training.com.csr
+
+## self signed certificate with private key
+3. openssl -x509 -in minutus.training.com.csr -out minutus.training.com.crt -req -signkey minutus.training.com.key -days 365
+
+
+Description of the arguments:
+
+-req	=  Request to create a new certificate.
+-new	= Creating a certificate request (Certificate Signing Request - CSR).
+-x509	= Instead of creating a CSR, create a self-signed certificate.
+-days	= Validity period is 365 days (1 year).
+-nodes	= Do not encrypt the private key.
+-out 	= Where to store the certificate.
+-keyout	= Where to store the private key. 

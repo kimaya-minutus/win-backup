@@ -1,0 +1,66 @@
+##ReverseProxy Configuration in windows##
+
+####First install apache####
+
+with the help of this create the environment for reverseproxy and two more servers{app1 app2}
+
+###Change the conf file for them
+
+##	For reverseproxy go to httpd.conf add this modules and proxypass
+
+$	LoadModule proxy_module modules/mod_proxy.so
+$	LoadModule proxy_http_module modules/mod_proxy_http.so
+
+		<VirtualHost *:80>
+			<location /app1>
+		ProxyPass  http://localhost:91/
+		ProxyPassReverse  http://localhost:91/
+		#RewriteEngine  On
+		</location>
+		<location /app2>
+		ProxyPass  http://localhost:92/
+		ProxyPassReverse  http://localhost:92/
+		#RewriteEngine  On
+		</location>
+		</VirtualHost>
+
+
+
+Go to command prompt for that and add the services for them all by installing 
+				
+				steps for installation
+				
+###		location for reverse proxy D:\reverseproxy\apache24\bin
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "reverseproxy"
+		httpd -t 				(then check again for syntax)
+	
+	Errors and troubleshooting for
+	
+	ssl.cnf file include [comment that]
+	
+	ports in listening mode [find proccess ID (netstat -aob)] 
+	
+	
+###	location for app1 server D:\app1	
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "app1"
+		httpd -t 				(then check again for syntax)
+		
+		check for error
+		
+###	location for app1 server D:\app2	
+		
+		httpd -t 				(syntax ok)
+		httpd.exe -k install -n "app2"
+		httpd -t 				(then check again for syntax)
+		
+		check for error
+		
+###	Go to services and start those services		
+
+####	Just to avoide any error add the CN of SSL in Host file of windows	####
+
+###		go to browser and check for the url		###

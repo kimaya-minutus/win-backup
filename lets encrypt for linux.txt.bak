@@ -1,0 +1,54 @@
+Lets Encrypt on Linux:
+
+1. yum install httpd
+2.yum -y install mod_ssl
+3.systemctl start httpd.service 
+4. yum install epel-release
+5. yum install git
+6. cd /usr/local/
+7. git clone https://github.com/letsencrypt/letsencrypt
+8.cd /usr/local/letsencrypt
+9. ./letsencrypt-auto --apache -d your_domain.tld
+10. Supply the email address that will be used by Let’s Encrypt to recover your lost key
+    or for urgent notices and press Enter to continue. 
+11. Agree the terms of the license by hitting Enter key.
+12. select the ssl.conf file to be automatically modified by Let’s Encrypt client and press Enter to continue.
+13.choose the Easy method for HTTP requests and press Enter to move forward.
+14. Finally, if everything went smooth, a congratulation message should be displayed on the screen. 
+    Press Enter to release the prompt.
+   
+
+                       ### Test ###
+1.In order to test the straightness of your domain SSL/TLS handshake visit the below link and test your
+  certificate on your domain.
+
+https://www.ssllabs.com/ssltest/analyze.html
+2.  If you receive a series of reports concerning your domain vulnerability in the conducted tests, then you need to fix those security holes urgently.
+
+An overall rating of C class makes your domain very insecure. To fix these security problems, open Apache SSL configuration file and make the following changes:
+
+# vim /etc/httpd/conf.d/ssl.conf
+
+3. Search for line with SSLProtocol statement and add -SSLv3 at the end of the line
+4. Go deeper in the file, search and comment the line with SSLCipherSuite by 
+    placing a # in front of it and add the following content under this line:
+SSLCipherSuite          ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA
+SSLHonorCipherOrder     on
+SSLOptions +StrictRequire
+5. After you’ve made all the above changes, save and close the file, then restart Apache daemon to apply changes.
+
+# systemctl restart httpd.service  
+
+6. Now, tests the status of your domain encryption again, by visiting the same link as above. To perform retests hit the Clear cache link from the website.
+
+    https://www.ssllabs.com/ssltest/analyze.html
+
+
+       ######  Auto Renew Let’s Encrypt Certificates on Apache ######
+This beta version of Let’s Encrypt software releases certificates with expiration date after 90 days. So, in order to renew the SSL certificate, you must execute the letsencrypt-auto command again before expiration date, with the same options and flags used to obtain the initial certificate.
+
+An example on how to manually renew the certificate is presented below.
+
+1. cd /usr/local/letsencrypt
+2. ./letsencrypt-auto certonly --apache --renew-by-default  -d your_domain.tld
+		
