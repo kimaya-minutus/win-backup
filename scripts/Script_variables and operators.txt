@@ -1,0 +1,43 @@
+@@ Special variables:-
+1. $0 = file name of script
+2. $1----9 = these corresponds to arguments the script was invoked, 
+if you pick any 'n' no. it will be showing the position of that argument. 
+3. $# = it will return total no. of arguments present in the script
+4. $* = returns all the arguments which are double quoted
+5. $@ = returns all the arguments which are individually quoted
+6. $? = returns exit status of last command you have executed
+7. $$ = it shows process no. of current shell script
+
+
+## Arithmatic operators:-
+ e.g Addition = 'expr $a + $b '
+   Multiplication = 'expr $a \* $b '
+
+## Relational Operators :-
+1. -eq = equal to = e.g. [$a -eq $b]
+-ne = not equal to
+-gt = greater than 
+-lt = less than
+-ge = left operand is greater than right then returns true
+-le = left operand is less than right then returns true
+
+## String operators:-
+-z = it checks size is zero  = e.g. [-z $a] then returns true
+-n = it checks size is  not zero   = e.g. [-n $a] then returns true
+str checks if str is not empty 
+
+## File Test Operators:-
+-b file = blocked special file
+-c file = character special file
+-d file = checks file is a directory
+-f file = checks file is a ordinary file
+-g file = checks [SGID] group id bit is set 
+-k file = checks if file has set its sticky bit 
+-p file = checks file is a named pipe
+-t file = checks file descriptor open and associated to terminal 
+-u file = checks file has [SUID]  id bit is set 
+-r file = checks file is readable
+-w file = checks file is writable
+-x file = checks file is executable
+-s file = checks file has size greater than zero
+-e file = checks if file exists or not

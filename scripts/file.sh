@@ -1,0 +1,6 @@
+
+
+clear
+date
+cd /mnt 
+
